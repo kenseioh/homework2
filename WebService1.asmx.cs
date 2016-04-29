@@ -24,16 +24,20 @@ namespace WebRole1
     public class WebService1 : System.Web.Services.WebService
     {
         private PerformanceCounter process = new PerformanceCounter("Memory", "Available Mbytes");
-        public string filename = System.IO.Path.GetTempPath() + "\\filename.txt";
+        string filename = System.IO.Path.GetTempPath() + "\\wiki.txt";
         static Trie newTrie = new Trie();
         [WebMethod]
         public string DownloadWiki()
         {
+            string tempname = "wiki.txt";
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["StorageConnectionString"]);
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
             CloudBlobContainer container = blobClient.GetContainerReference("info344");
 
-            CloudBlockBlob blockBlob = container.GetBlockBlobReference("testing.txt");
+
+
+
+            CloudBlockBlob blockBlob = container.GetBlockBlobReference(tempname);
             using (var fileStream = System.IO.File.OpenWrite(filename))
 
 
@@ -64,31 +68,27 @@ namespace WebRole1
             building = new JavaScriptSerializer().Serialize(foundWords);
             return building;
         }
-        public float GetBytes()
-        {
-            float usage = process.NextValue();
-            return usage;
-        }
+
         [WebMethod]
         public string BuildTRIE()
         {
             int count = 0;
-            Trie newTrie = new Trie();
+            System.IO.StreamReader sr = new System.IO.StreamReader(filename);
             //string filename = System.Web.HttpContext.Current.Server.MapPath(@"C:\Users\iGuest\Desktop\wiki.txt");
-            using (StreamReader sr = new StreamReader(filename))
+           
                 while (!sr.EndOfStream)
                 {
                     newTrie.insert(sr.ReadLine());
-                    if (count % 1000 != 0)
+                    if (count % 1000 == 0)
                     {
-                        if (GetBytes() < 1000)
+                        if (process.NextValue() < 50)
                         {
                             break;
                         }
                     }
                     count++;
                 }
-            return "done";
+             return "done";
         }
         
     }
